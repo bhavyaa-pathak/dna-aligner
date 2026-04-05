@@ -59,7 +59,6 @@ def needleman_wunsch(seq1, seq2, match=2, mismatch=-1, gap=-2):
     # limit for performance
     if n > 20000 or m > 20000:
         return None, None, None, "Sequences too long (max 20000 chars each for alignment)"
-
     dp = [[0] * (m + 1) for _ in range(n + 1)]
     for i in range(n + 1):
         dp[i][0] = i * gap
