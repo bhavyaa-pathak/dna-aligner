@@ -57,8 +57,8 @@ def detect_type(seq):
 def needleman_wunsch(seq1, seq2, match=2, mismatch=-1, gap=-2):
     n, m = len(seq1), len(seq2)
     # limit for performance
-    if n > 1000 or m > 1000:
-        return None, None, None, "Sequences too long (max 1000 chars each for alignment)"
+    if n > 20000 or m > 20000:
+        return None, None, None, "Sequences too long (max 20000 chars each for alignment)"
 
     dp = [[0] * (m + 1) for _ in range(n + 1)]
     for i in range(n + 1):
