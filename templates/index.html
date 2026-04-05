@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sequence Aligner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0f1e;
+      --panel: #111827;
+      --border: #1e2d40;
+      --accent: #00e5ff;
+      --accent2: #39ff14;
+      --accent3: #ff6b6b;
+      --accent4: #f59e0b;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --card: #0d1b2a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrap { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 40px 20px 80px; }
+
+    /* ── Header ── */
+    header { text-align: center; margin-bottom: 48px; }
+    .badge {
+      display: inline-block;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 4px 14px;
+      border-radius: 2px;
+      margin-bottom: 18px;
+      text-transform: uppercase;
+    }
+    h1 {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -1px;
+    }
+    h1 span { color: var(--accent); }
+    header p { margin-top: 12px; color: var(--muted); font-size: 15px; font-weight: 300; }
+
+    /* ── Mode Buttons ── */
+    .mode-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .mode-btn {
+      flex: 1;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 1px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+    .mode-btn .icon { font-size: 22px; display: block; margin-bottom: 6px; }
+    .mode-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .mode-btn.active {
+      background: rgba(0,229,255,0.1);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .mode-btn.active-protein {
+      background: rgba(57,255,20,0.08);
+      border-color: var(--accent2);
+      color: var(--accent2);
+    }
+
+    /* ── Input Grid ── */
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media(max-width: 600px) { .input-grid { grid-template-columns: 1fr; } }
+
+    .input-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+    }
+    .input-card label {
+      display: block;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    textarea {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      padding: 12px;
+      border-radius: 4px;
+      resize: vertical;
+      min-height: 140px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    textarea:focus { border-color: var(--accent); }
+    textarea::placeholder { color: var(--muted); font-size: 11px; }
+
+    .ex-row { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .ex-btn {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ex-btn:hover { color: var(--accent2); border-color: var(--accent2); }
+
+    /* ── Motif Toggle ── */
+    .motif-row {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .motif-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .motif-label span { color: var(--accent4); }
+
+    .toggle-wrap { display: flex; align-items: center; gap: 10px; }
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      cursor: pointer;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 24px;
+      transition: 0.3s;
+    }
+    .slider:before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; top: 3px;
+      background: var(--muted);
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    input:checked + .slider { background: rgba(245,158,11,0.3); border: 1px solid var(--accent4); }
+    input:checked + .slider:before { transform: translateX(20px); background: var(--accent4); }
+    .toggle-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+    .toggle-text.on { color: var(--accent4); }
+
+    /* ── Run Button ── */
+    #run-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #000;
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      border: none;
+      padding: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+      margin-bottom: 32px;
+    }
+    #run-btn:hover { background: #fff; }
+    #run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    #run-btn.protein-mode { background: var(--accent2); }
+    #run-btn.protein-mode:hover { background: #fff; }
+
+    /* ── Results ── */
+    #results { display: none; }
+    #results.show { display: block; animation: fadeUp 0.4s ease; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Stats bar */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    @media(max-width:600px) { .stats-grid { grid-template-columns: repeat(2,1fr); } }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-card .val {
+      font-family: 'Space Mono', monospace;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+      display: block;
+    }
+    .stat-card .val.green { color: var(--accent2); }
+    .stat-card .val.red { color: var(--accent3); }
+    .stat-card .val.yellow { color: var(--accent4); }
+    .stat-card .lbl {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* Identity bar */
+    .identity-bar-wrap { margin-bottom: 24px; }
+    .identity-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: var(--border);
+      border-radius: 5px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .identity-bar-fill {
+      height: 100%;
+      border-radius: 5px;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      transition: width 0.8s ease;
+    }
+    .identity-label {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+    .identity-label strong { color: var(--accent); font-size: 14px; }
+
+    /* Alignment display */
+    .alignment-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      overflow-x: auto;
+      margin-bottom: 24px;
+    }
+    .alignment-block { margin-bottom: 16px; }
+    .aln-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 4px;
+    }
+    .aln-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      width: 36px;
+      flex-shrink: 0;
+      padding-top: 1px;
+      letter-spacing: 1px;
+    }
+    .aln-seq {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 1px;
+      white-space: pre;
+      line-height: 1.6;
+    }
+    .aln-seq.seq1 { color: var(--accent); }
+    .aln-seq.seq2 { color: var(--accent2); }
+    .aln-seq.match { color: var(--muted); font-size: 11px; }
+
+    /* Match chars colored */
+    .m { color: var(--accent2); }
+    .mm { color: var(--accent3); }
+    .gap-char { color: var(--border); }
+
+    /* Motif results */
+    .motif-section { margin-bottom: 24px; }
+    .motif-seq-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--accent4);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .motif-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .motif-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent4);
+      border-radius: 4px;
+      padding: 10px 14px;
+    }
+    .motif-name { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--accent4); margin-bottom: 5px; }
+    .motif-hits { display: flex; flex-wrap: wrap; gap: 5px; }
+    .motif-hit {
+      background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 3px;
+      padding: 2px 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--text);
+    }
+    .motif-hit span { color: var(--muted); font-size: 9px; }
+    .no-motif { color: var(--muted); font-family: 'Space Mono', monospace; font-size: 12px; padding: 10px 0; }
+
+    /* Error */
+    .error-box {
+      background: rgba(255,107,107,0.1);
+      border: 1px solid rgba(255,107,107,0.4);
+      color: var(--accent3);
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      padding: 16px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="badge">Bioinformatics · Alignment Tool</div>
+    <h1>Sequence <span>Aligner</span></h1>
+    <p>Global alignment · Identity score · Motif detection — paste any FASTA or raw sequence</p>
+  </header>
+
+  <!-- Mode Selector -->
+  <div class="mode-row">
+    <button class="mode-btn active" id="dna-btn" onclick="setMode('dna')">
+      <span class="icon">🧬</span>DNA → DNA
+    </button>
+    <button class="mode-btn" id="protein-btn" onclick="setMode('protein')">
+      <span class="icon">🔬</span>PROTEIN → PROTEIN
+    </button>
+  </div>
+
+  <!-- Sequence Inputs -->
+  <div class="input-grid">
+    <div class="input-card">
+      <label>Sequence 1 — paste FASTA or raw</label>
+      <textarea id="seq1" placeholder=">Accession line is skipped automatically&#10;ATGCGTACGATCGATCGATGCG..."></textarea>
+      <div class="ex-row">
+        <span style="font-size:10px;color:var(--muted);align-self:center;">Example:</span>
+        <button class="ex-btn" onclick="loadEx(1,'dna1')">DNA Sample</button>
+        <button class="ex-btn" onclick="loadEx(1,'prot1')">Protein Sample</button>
+        <button class="ex-btn" onclick="loadEx(1,'fasta1')">FASTA</button>
+      </div>
+    </div>
+    <div class="input-card">
+      <label>Sequence 2 — paste FASTA or raw</label>
+      <textarea id="seq2" placeholder=">Accession line is skipped automatically&#10;ATGCGTACGATCGATCGATGCG..."></textarea>
+      <div class="ex-row">
+        <span style="font-size:10px;color:var(--muted);align-self:center;">Example:</span>
+        <button class="ex-btn" onclick="loadEx(2,'dna2')">DNA Sample</button>
+        <button class="ex-btn" onclick="loadEx(2,'prot2')">Protein Sample</button>
+        <button class="ex-btn" onclick="loadEx(2,'fasta2')">FASTA</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Motif Toggle -->
+  <div class="motif-row">
+    <div class="motif-label">🔍 <span>Analyze Motifs Also</span> — toggle to include motif search in results</div>
+    <div class="toggle-wrap">
+      <span class="toggle-text" id="toggle-text">OFF</span>
+      <label class="toggle">
+        <input type="checkbox" id="motif-toggle" onchange="updateToggle()"/>
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Run -->
+  <button id="run-btn" onclick="runAlign()">▶ Align Sequences</button>
+
+  <!-- Results -->
+  <div id="results">
+    <div class="section-title" id="result-title">Alignment Results</div>
+    <div id="result-body"></div>
+  </div>
+
+</div>
+
+<script>
+const EXAMPLES = {
+  dna1:   'ATGCGTACGATCGATCGATGCGATCGAATTCGGATCCATGCGTACG',
+  dna2:   'ATGCGAACGATCGATCAATGCGATCGAATTCGGATCCATGCATACG',
+  prot1:  'MARVLKQYASGKRPNRGESDEQNRDTGTSAVELLWMAAEKFPK',
+  prot2:  'MARVLKQYASGKRPNRGESDEQNRDTGTSAVELLWMAAEKFPKLL',
+  fasta1: '>NM_001234.5 Homo sapiens example gene\nATGCGTACGATCGATCGATGCGATCGAATTCGGATCCATGCGTACG',
+  fasta2: '>NM_005678.3 Homo sapiens related gene\nATGCGAACGATCGATCAATGCGATCGAATTCGGATCCATGCATACG',
+};
+
+let currentMode = 'dna';
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('dna-btn').className = 'mode-btn' + (mode === 'dna' ? ' active' : '');
+  document.getElementById('protein-btn').className = 'mode-btn' + (mode === 'protein' ? ' active-protein' : '');
+  const btn = document.getElementById('run-btn');
+  btn.className = mode === 'protein' ? 'protein-mode' : '';
+  btn.textContent = mode === 'dna' ? '▶ Align DNA Sequences' : '▶ Align Protein Sequences';
+  document.getElementById('results').classList.remove('show');
+}
+
+function loadEx(box, key) {
+  document.getElementById('seq' + box).value = EXAMPLES[key] || '';
+}
+
+function updateToggle() {
+  const on = document.getElementById('motif-toggle').checked;
+  const t = document.getElementById('toggle-text');
+  t.textContent = on ? 'ON' : 'OFF';
+  t.className = 'toggle-text' + (on ? ' on' : '');
+}
+
+async function runAlign() {
+  const seq1 = document.getElementById('seq1').value.trim();
+  const seq2 = document.getElementById('seq2').value.trim();
+  const motif = document.getElementById('motif-toggle').checked;
+
+  if (!seq1 || !seq2) { alert('Please enter both sequences!'); return; }
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = '⟳ Aligning...';
+
+  try {
+    const res = await fetch('/api/align', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ seq1, seq2, mode: currentMode, motif })
+    });
+    const data = await res.json();
+    if (data.error) showError(data.error);
+    else showResult(data, motif);
+  } catch(e) {
+    showError('Network error — is the Flask server running?');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+function showError(msg) {
+  document.getElementById('result-title').textContent = 'Error';
+  document.getElementById('result-body').innerHTML = `<div class="error-box">⚠ ${msg}</div>`;
+  document.getElementById('results').classList.add('show');
+}
+
+function colorSeq(seq, isMatch) {
+  // isMatch = array of booleans per char
+  return seq.split('').map((c, i) => {
+    if (c === '-') return `<span class="gap-char">-</span>`;
+    return `<span>${c}</span>`;
+  }).join('');
+}
+
+function colorMatchLine(line) {
+  return line.split('').map(c => {
+    if (c === '|') return `<span class="m">|</span>`;
+    if (c === '.') return `<span class="mm">.</span>`;
+    return `<span class="gap-char"> </span>`;
+  }).join('');
+}
+
+function chunkAlignment(a1, matchLine, a2, chunkSize = 60) {
+  let html = '';
+  for (let i = 0; i < a1.length; i += chunkSize) {
+    const s1 = a1.slice(i, i + chunkSize);
+    const ml = matchLine.slice(i, i + chunkSize);
+    const s2 = a2.slice(i, i + chunkSize);
+    const pos = i + 1;
+    html += `<div class="alignment-block">
+      <div class="aln-row"><span class="aln-tag">SEQ1</span><span class="aln-seq seq1">${s1}</span></div>
+      <div class="aln-row"><span class="aln-tag"></span><span class="aln-seq match">${colorMatchLine(ml)}</span></div>
+      <div class="aln-row"><span class="aln-tag">SEQ2</span><span class="aln-seq seq2">${s2}</span></div>
+    </div>`;
+  }
+  return html;
+}
+
+function showResult(data, motifOn) {
+  document.getElementById('result-title').textContent =
+    `${data.mode.toUpperCase()} Alignment · ${data.seq1_type} vs ${data.seq2_type}`;
+
+  let html = '';
+
+  // Stats
+  html += `<div class="stats-grid">
+    <div class="stat-card"><span class="val">${data.identity}%</span><span class="lbl">Identity</span></div>
+    <div class="stat-card"><span class="val green">${data.matches}</span><span class="lbl">Matches</span></div>
+    <div class="stat-card"><span class="val red">${data.mismatches}</span><span class="lbl">Mismatches</span></div>
+    <div class="stat-card"><span class="val yellow">${data.gaps}</span><span class="lbl">Gaps</span></div>
+  </div>`;
+
+  // Identity bar
+  html += `<div class="identity-bar-wrap">
+    <div class="identity-bar-bg">
+      <div class="identity-bar-fill" style="width:${data.identity}%"></div>
+    </div>
+    <div class="identity-label">
+      <span>0%</span>
+      <strong>${data.identity}% sequence identity</strong>
+      <span>100%</span>
+    </div>
+  </div>`;
+
+  // Alignment
+  html += `<div class="alignment-wrap">${chunkAlignment(data.aligned1, data.match_line, data.aligned2)}</div>`;
+
+  // Motifs
+  if (motifOn) {
+    html += `<div class="section-title" style="color:var(--accent4)">Motif Analysis</div>`;
+
+    ['1', '2'].forEach(n => {
+      const motifs = data['motifs' + n];
+      html += `<div class="motif-section">
+        <div class="motif-seq-title">Sequence ${n} Motifs</div>`;
+      if (!motifs || Object.keys(motifs).length === 0) {
+        html += `<div class="no-motif">No known motifs found in sequence ${n}.</div>`;
+      } else {
+        html += `<div class="motif-list">`;
+        Object.entries(motifs).forEach(([name, hits]) => {
+          const chips = hits.map(h =>
+            `<div class="motif-hit">${h[2]} <span>pos ${h[0]+1}–${h[1]}</span></div>`
+          ).join('');
+          html += `<div class="motif-item">
+            <div class="motif-name">${name} (${hits.length}×)</div>
+            <div class="motif-hits">${chips}</div>
+          </div>`;
+        });
+        html += `</div>`;
+      }
+      html += `</div>`;
+    });
+  }
+
+  document.getElementById('result-body').innerHTML = html;
+  document.getElementById('results').classList.add('show');
+}
+
+// Init
+setMode('dna');
+</script>
+</body>
+</html>
