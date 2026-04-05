@@ -4,19 +4,18 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sequence Aligner</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;1,300&family=Geist:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --bg: #0a0f1e;
-      --panel: #111827;
-      --border: #1e2d40;
-      --accent: #00e5ff;
-      --accent2: #39ff14;
-      --accent3: #ff6b6b;
-      --accent4: #f59e0b;
-      --text: #e2e8f0;
-      --muted: #64748b;
-      --card: #0d1b2a;
+      --bg: #f7f5f2;
+      --panel: #ffffff;
+      --border: #e8e3dc;
+      --accent: #2d6a4f;
+      --accent2: #40916c;
+      --accent3: #c0392b;
+      --text: #1a1a1a;
+      --muted: #8a8480;
+      --card: #faf8f5;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -30,32 +29,40 @@
     }
 
     body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 0;
+      content: none;
     }
 
     .wrap { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 40px 20px 80px; }
 
     /* ── Header ── */
-    header { text-align: center; margin-bottom: 48px; }
-    .badge {
+    header .badge {
       display: inline-block;
-      font-family: 'Space Mono', monospace;
+      font-family: 'Geist', sans-serif;
       font-size: 11px;
-      letter-spacing: 3px;
+      letter-spacing: 1px;
       color: var(--accent);
-      border: 1px solid var(--accent);
-      padding: 4px 14px;
-      border-radius: 2px;
-      margin-bottom: 18px;
-      text-transform: uppercase;
+      background: #d8f3dc;
+      border: none;
+      padding: 5px 14px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    header h1 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 300;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      color: var(--text);
+    }
+    header h1 span { color: var(--accent); font-style: italic; }
+    header p {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 300;
+      line-height: 1.6;
     }
     h1 {
       font-family: 'Space Mono', monospace;
@@ -74,32 +81,46 @@
       margin-bottom: 24px;
     }
     .mode-btn {
-      flex: 1;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-family: 'Space Mono', monospace;
-      font-size: 12px;
-      letter-spacing: 1px;
-      padding: 16px;
-      text-align: center;
-      cursor: pointer;
-      border-radius: 4px;
-      transition: all 0.2s;
-      text-transform: uppercase;
-    }
-    .mode-btn .icon { font-size: 22px; display: block; margin-bottom: 6px; }
-    .mode-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .mode-btn.active {
-      background: rgba(0,229,255,0.1);
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-    .mode-btn.active-protein {
-      background: rgba(57,255,20,0.08);
-      border-color: var(--accent2);
-      color: var(--accent2);
-    }
+  flex: 1;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: 'Geist', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 12px 10px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.mode-btn .icon {
+  font-size: 20px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.mode-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: #d8f3dc;
+}
+
+.mode-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  box-shadow: 0 2px 8px rgba(45,106,79,0.25);
+}
+
+/* KEEP THIS (optional tweak below) */
+.mode-btn.active-protein {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  color: white;
+}
 
     /* ── Input Grid ── */
     .input-grid {
@@ -216,23 +237,25 @@
     #run-btn {
       width: 100%;
       background: var(--accent);
-      color: #000;
-      font-family: 'Space Mono', monospace;
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 2px;
+      color: white;
+      font-family: 'Geist', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
       border: none;
       padding: 16px;
-      border-radius: 4px;
+      border-radius: 12px;
       cursor: pointer;
-      text-transform: uppercase;
       transition: all 0.2s;
-      margin-bottom: 32px;
+      margin-bottom: 28px;
+      box-shadow: 0 2px 8px rgba(45,106,79,0.3);
     }
-    #run-btn:hover { background: #fff; }
-    #run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    #run-btn.protein-mode { background: var(--accent2); }
-    #run-btn.protein-mode:hover { background: #fff; }
+    #run-btn:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(45,106,79,0.35);
+    }
+    #run-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
     /* ── Results ── */
     #results { display: none; }
